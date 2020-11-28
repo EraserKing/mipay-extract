@@ -17,6 +17,16 @@ case $key in
     echo "--> Modify Clock to support work day alarms"
     shift
     ;;
+    --mms)
+    EXTRA_PRIV="priv-app/Mms priv-app/MmsService $EXTRA_PRIV"
+    echo "--> Modify MMS service"
+    shift
+    ;;
+    --phone)
+    EXTRA_PRIV="priv-app/Contacts priv-app/InCallUI $EXTRA_PRIV"
+    echo "--> Modify phone contacts and dialer"
+    shift
+    ;;
     --nofbe)
     NO_EXTRA_FBE="yes"
     shift
@@ -166,9 +176,9 @@ deodex() {
             dexclass="classes.dex"
             $baksmali d $apkfile -o $apkdir/smali || return 1
             if [[ "$app" == "Calendar" ]]; then
-                $patchmethod $apkdir/smali/com/miui/calendar/util/LocalizationUtils.smali \
-                             showsDayDiff showsLunarDate showsWidgetHoliday -showsWorkFreeDay \
-                             -isMainlandChina -isGreaterChina || return 1
+                sed -i '/0x7f0/{N;N;N;N;
+                a  const/4 p0, 0x1
+                }' $apkdir/smali/com/miui/calendar/util/B.smali
             fi
 
             if [[ "$app" == "Weather" ]]; then
@@ -178,6 +188,21 @@ deodex() {
                 if [ -f "$i" ]; then
                     $patchmethod "$i" -canRequestCommercial -canRequestCommercialInfo || return 1
                 fi
+            fi
+
+            if [[ "$app" == "MmsService" ]]; then
+                echo "----> searching smali..."
+                update_international_build_flag "$apkdir/smali/com/miui"
+            fi
+
+            if [[ "$app" == "Mms" ]]; then
+                echo "----> searching smali..."
+                update_international_build_flag "$apkdir/smali/com/miui"
+            fi
+
+            if [[ "$app" == "Contacts" ]]; then
+                echo "----> searching smali..."
+                update_international_build_flag "$apkdir/smali/com/miui"
             fi
 
             if [[ "$app" == "SecurityCenter" ]]; then
